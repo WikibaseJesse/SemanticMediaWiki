@@ -9,6 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mediawiki:1.35
+    defaults:
+      run:
+        shell: bash
+        working-directory: /var/www/html
     services:
       mariadb:
         image: mariadb
@@ -25,8 +29,6 @@ jobs:
           rm composer-setup.php
           php composer.phar self-update --1
           apt-get update && apt-get install -y zip
-      - name: go to mediawiki root
-        run: cd /var/www/html
       - name: run composer
         run: php composer.phar require mediawiki/semantic-media-wiki phpunit/phpunit
       - name: install mediawiki
