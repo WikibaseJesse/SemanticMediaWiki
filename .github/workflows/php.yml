@@ -2,13 +2,16 @@ on:
   push:
     branches:
       - master
-
 jobs:
-  Test135:
-    name: MediaWiki 1.35
+  MW135:
+    strategy:
+      fail-fast: false
+      matrix:
+        mediawiki: [1.35, 1.36, 1.37]
+    name: MediaWiki ${{ matrix.mediawiki }}
     runs-on: ubuntu-latest
     container:
-      image: mediawiki:1.35
+      image: mediawiki:${{ maxtrix.mediawiki }}
     defaults:
       run:
         shell: bash
