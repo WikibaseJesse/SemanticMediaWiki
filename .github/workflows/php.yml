@@ -30,7 +30,7 @@ jobs:
           php composer.phar self-update --1
           apt-get update && apt-get install -y zip
       - name: run composer
-        run: php composer.phar require mediawiki/semantic-media-wiki phpunit/phpunit
+        run: php composer.phar require mediawiki/semantic-media-wiki:dev-master phpunit/phpunit:~8.5
       - name: install mediawiki
         run: php maintenance/install.php --dbname=test --dbserver=mariadb --dbuser=user --dbpass=password --pass=password  test admin
       - name: add to LocalSettings.php
