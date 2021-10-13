@@ -32,7 +32,7 @@ jobs:
       - name: run composer
         run: php composer.phar require mediawiki/semantic-media-wiki:dev-master phpunit/phpunit:~8.5
       - name: install mediawiki
-        run: php maintenance/install.php --dbname=test --dbserver=mariadb --dbuser=user --dbpass=password --pass=password  test admin
+        run: php maintenance/install.php --dbname=test --dbserver=mariadb --dbuser=user --dbpass=password --pass=passwordtest  test admin
       - name: add to LocalSettings.php
         run: |
           echo 'error_reporting(E_ALL|E_STRICT);' >> LocalSettings.php
