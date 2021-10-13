@@ -1,0 +1,47 @@
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  Test135:
+    name: MediaWiki 1.35
+    runs-on: ubuntu-latest
+    container:
+      image: mediawiki:1.35
+    services:
+      mariadb:
+        image: mariadb
+        env:
+          MARIADB_DATABASE: test
+          MARIADB_USER: user
+          MARIADB_PASSWORD: password
+          MARIADB_ROOT_PASSWORD: rootpassword
+    steps:
+      - name: install composer
+        run: |
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php composer-setup.php --quiet
+          rm composer-setup.php
+          php composer.phar self-update --1
+      - name: run composer
+        run: php composer.phar require mediawiki/semantic-media-wiki phpunit/phpunit
+      - name: install mediawiki
+        run: php maintenance/install.php --dbname=test --dbserver=mariadb --dbuser=user --dbpass=password --pass=password  test admin
+      - name: add to LocalSettings.php
+        run: |
+          echo 'error_reporting(E_ALL|E_STRICT);' >> LocalSettings.php
+          echo 'ini_set("display_errors", 1);' >> LocalSettings.php
+          echo '$wgShowExceptionDetails = true;' >> LocalSettings.php
+          echo '$wgDevelopmentWarnings = true;' >> LocalSettings.php
+          echo '$wgShowSQLErrors = true;' >> LocalSettings.php
+          echo '$wgDebugDumpSql = false;' >> LocalSettings.php
+          echo '$wgShowDBErrorBacktrace = true;' >> LocalSettings.php
+          echo 'enableSemantics( 'test.org' );' >> LocalSettings.php
+          echo '$smwgDefaultStore = "SMWSQLStore3";' >> LocalSettings.php
+      - name: run update.php
+        run: php maintenance/update.php --quick
+      - name: run test
+        run: cd extensions/SemanticMediaWiki && php ../../composer.phar phpunit
+      
+
