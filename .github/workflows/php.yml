@@ -18,14 +18,15 @@ jobs:
           MARIADB_PASSWORD: password
           MARIADB_ROOT_PASSWORD: rootpassword
     steps:
-      - name: install composer
+      - name: install composer and zip
         run: |
           php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
           php composer-setup.php --quiet
           rm composer-setup.php
           php composer.phar self-update --1
-      - name: wheream1
-        run: pwd
+          apt-get update && apt-get install -y zip
+      - name: go to mediawiki root
+        run: cd /var/www/html
       - name: run composer
         run: php composer.phar require mediawiki/semantic-media-wiki phpunit/phpunit
       - name: install mediawiki
