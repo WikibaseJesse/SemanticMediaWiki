@@ -3,11 +3,11 @@ on:
     branches:
       - master
 jobs:
-  MW135:
+  MediaWiki:
     strategy:
       fail-fast: false
       matrix:
-        mediawiki: [1.35, 1.36, 1.37]
+        mediawiki: [1.35, 1.36]
     name: MediaWiki ${{ matrix.mediawiki }}
     runs-on: ubuntu-latest
     container:
@@ -25,6 +25,66 @@ jobs:
           MARIADB_PASSWORD: password
           MARIADB_ROOT_PASSWORD: rootpassword
     steps:
+      - name: install composer and zip
+        run: |
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php composer-setup.php --quiet
+          rm composer-setup.php
+          php composer.phar self-update --1
+          apt-get update && apt-get install -y zip
+      - name: run composer
+        run: php composer.phar require mediawiki/semantic-media-wiki:dev-master phpunit/phpunit:~8.5
+      - name: install mediawiki
+        run: php maintenance/install.php --dbname=test --dbserver=mariadb --dbuser=user --dbpass=password --pass=passwordtest  test admin
+      - name: add to LocalSettings.php
+        run: |
+          echo 'error_reporting(E_ALL|E_STRICT);' >> LocalSettings.php
+          echo 'ini_set("display_errors", 1);' >> LocalSettings.php
+          echo '$wgShowExceptionDetails = true;' >> LocalSettings.php
+          echo '$wgDevelopmentWarnings = true;' >> LocalSettings.php
+          echo '$wgShowSQLErrors = true;' >> LocalSettings.php
+          echo '$wgDebugDumpSql = false;' >> LocalSettings.php
+          echo '$wgShowDBErrorBacktrace = true;' >> LocalSettings.php
+          echo 'enableSemantics( 'test.org' );' >> LocalSettings.php
+          echo '$smwgDefaultStore = "SMWSQLStore3";' >> LocalSettings.php
+      - name: run update.php
+        run: php maintenance/update.php --quick
+      - name: run test
+        run: cd extensions/SemanticMediaWiki && php ../../composer.phar phpunit
+  PHP:
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [8.0, 8.1]
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    container:
+      image: php:${{ matrix.php }}-apache
+    defaults:
+      run:
+        shell: bash
+        working-directory: /var/www/html
+    services:
+      mariadb:
+        image: mariadb
+        env:
+          MARIADB_DATABASE: test
+          MARIADB_USER: user
+          MARIADB_PASSWORD: password
+          MARIADB_ROOT_PASSWORD: rootpassword
+    steps:
+      - name: do all mw docker things
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git librsvg2-bin imagemagick python3 libicu-dev libonig-dev
+          docker-php-ext-install intl mbstring mysqli opcache
+          pecl install APCu-5.1.20
+          docker-php-ext-enable apcu
+          curl -fSL "https://releases.wikimedia.org/mediawiki/1.35/mediawiki-1.35.4.tar.gz" -o mediawiki.tar.gz
+          tar -x --strip-components=1 -f mediawiki.tar.gz
+          rm -r mediawiki.tar.gz
+          chown -R www-data:www-data extensions skins cache images
+
       - name: install composer and zip
         run: |
           php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
