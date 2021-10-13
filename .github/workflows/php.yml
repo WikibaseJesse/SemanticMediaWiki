@@ -24,6 +24,8 @@ jobs:
           php composer-setup.php --quiet
           rm composer-setup.php
           php composer.phar self-update --1
+      - name: wheream1
+        run: ls -al
       - name: run composer
         run: php composer.phar require mediawiki/semantic-media-wiki phpunit/phpunit
       - name: install mediawiki
