@@ -4,10 +4,15 @@ on:
       - master
 jobs:
   MediaWiki:
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        mediawiki: [1.35, 1.36]
+        mediawiki: [1.35]
+        experimental: [false]
+        include:
+          - mediawiki: 1.36
+            experimental: true
     name: MediaWiki ${{ matrix.mediawiki }}
     runs-on: ubuntu-latest
     container:
@@ -52,10 +57,11 @@ jobs:
       - name: run test
         run: cd extensions/SemanticMediaWiki && php ../../composer.phar phpunit
   PHP:
+    continue-on-error: true
     strategy:
-      fail-fast: false
+      fail-fast: false  
       matrix:
-        php: [8.0, 8.1]
+        php: [8.0, 8.1-rc]
     name: PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
     container:
